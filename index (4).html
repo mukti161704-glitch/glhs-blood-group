@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#e11d48">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>LifeDrop - Blood Donation App</title>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* ==================== APP STYLES ==================== */
+    :root {
+      --primary: #e11d48;
+      --primary-hover: #be123c;
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --radius: 16px;
+      --shadow: 0 4px 20px -2px rgba(225, 29, 72, 0.08);
+      --nav-height: 64px;
+      --header-height: 56px;
+    }
+
+    [data-theme="dark"] {
+      --bg-body: #0f172a;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Mobile Viewport */
+    .app-viewport {
+      width: 100%;
+      max-width: 480px;
+      height: 100vh;
+      height: 100dvh;
+      background: var(--bg-body);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+    }
+
+    /* Header */
+    .app-header {
+      height: var(--header-height);
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 10;
+      display: none; /* Hidden during onboarding */
+    }
+
+    .app-header.visible {
+      display: flex;
+    }
+
+    .app-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-main);
+      font-size: 1.2rem;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Main Area */
+    .app-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      position: relative;
+    }
+
+    .view {
+      display: none;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Form */
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 20px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-body);
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary);
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn:active {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    /* Navigation */
+    .app-nav {
+      height: var(--nav-height);
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-color);
+      display: none; /* Hidden during onboarding */
+      justify-content: space-around;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .app-nav.visible {
+      display: flex;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 500;
+      width: 25%;
+    }
+
+    .nav-item i {
+      font-size: 1.25rem;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    /* Request Cards */
+    .blood-badge {
+      background: #ffe4e6;
+      color: #e11d48;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+
+    [data-theme="dark"] .blood-badge {
+      background: #881337;
+      color: #fecdd3;
+    }
+
+    .request-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .request-card:last-child {
+      border-bottom: none;
+    }
+
+    /* ========== ONBOARDING STYLES ========== */
+    .onboarding-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-body);
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+      padding: 24px;
+    }
+
+    .onboarding-screen.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .onboarding-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Splash Logo */
+    .splash-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .blood-drop {
+      font-size: 5rem;
+      color: var(--primary);
+      opacity: 0;
+      transform: scale(0.5);
+      animation: bloodAppear 2s ease forwards;
+    }
+
+    .splash-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary);
+      opacity: 0;
+      animation: fadeUp 1s ease 1.2s forwards;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    .splash-tagline {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      opacity: 0;
+      animation: fadeUp 1s ease 1.6s forwards;
+    }
+
+    @keyframes bloodAppear {
+      0% { opacity: 0; transform: scale(0.3) translateY(20px); }
+      60% { opacity: 1; transform: scale(1.1) translateY(0); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Language & Role Selection */
+    .selection-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    .selection-card h2 {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    .selection-card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+
+    .lang-btn, .role-btn {
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: 14px;
+      border: 2px solid var(--border-color);
+      background: var(--bg-body);
+      color: var(--text-main);
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all 0.25s ease;
+    }
+
+    .lang-btn:hover, .role-btn:hover,
+    .lang-btn:active, .role-btn:active {
+      border-color: var(--primary);
+      background: #fff1f2;
+      color: var(--primary);
+    }
+
+    [data-theme="dark"] .lang-btn:hover,
+    [data-theme="dark"] .role-btn:hover {
+      background: #3f1a24;
+    }
+
+    .lang-btn i, .role-btn i {
+      font-size: 1.3rem;
+    }
+
+    /* Ad Screen */
+    .ad-container {
+      width: 100%;
+      max-width: 340px;
+      text-align: center;
+    }
+
+    .ad-container h2 {
+      margin-bottom: 12px;
+    }
+
+    .ad-frame {
+      width: 100%;
+      height: 280px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-card);
+      margin: 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .ad-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .ad-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-viewport">
+    
+    <!-- ========== ONBOARDING SCREENS ========== -->
+
+    <!-- 1. Splash Screen with Blood Logo -->
+    <div id="splash" class="onboarding-screen active">
+      <div class="splash-logo">
+        <i class="fa-solid fa-droplet blood-drop"></i>
+        <div class="splash-title">GLHS BLOOD GROUP</div>
+        <div class="splash-tagline">Save Lives. Donate Blood.</div>
+      </div>
+    </div>
+
+    <!-- 2. Language Selection -->
+    <div id="language" class="onboarding-screen">
+      <div class="selection-card">
+        <i class="fa-solid fa-globe" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 12px;"></i>
+        <h2 data-i18n="choose_lang">Choose Language</h2>
+        <p data-i18n="choose_lang_desc">Select your preferred language</p>
+        
+        <button class="lang-btn" onclick="selectLanguage('en')">
+          <i class="fa-solid fa-language"></i> English
+        </button>
+        <button class="lang-btn" onclick="selectLanguage('bn')">
+          <i class="fa-solid fa-language"></i> বাংলা (Bangla)
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Role Selection: Donor or Need Blood -->
+    <div id="role" class="onboarding-screen">
+      <div class="selection-card">
+        <i class="fa-solid fa-heart-pulse" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 12px;"></i>
+        <h2 data-i18n="who_are_you">Who are you?</h2>
+        <p data-i18n="who_are_you_desc">Please select your role to continue</p>
+        
+        <button class="role-btn" onclick="selectRole('donor')">
+          <i class="fa-solid fa-hand-holding-droplet"></i>
+          <span data-i18n="i_am_donor">I am a Blood Donor</span>
+        </button>
+        <button class="role-btn" onclick="selectRole('need')">
+          <i class="fa-solid fa-hospital"></i>
+          <span data-i18n="i_need_blood">I Need Blood</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. Ad Screen (for Donors) -->
+    <div id="adScreen" class="onboarding-screen">
+      <div class="ad-container">
+        <div class="selection-card" style="max-width: 100%;">
+          <i class="fa-solid fa-hand-holding-heart" style="font-size: 2rem; color: var(--primary); margin-bottom: 8px;"></i>
+          <h2 data-i18n="thank_donor">Thank you, Hero!</h2>
+          <p class="ad-note" data-i18n="ad_note">Please view this short message. Your support helps us keep the service free.</p>
+          
+          <div class="ad-frame">
+            <iframe id="adIframe" src="about:blank" title="Sponsored Content" allow="autoplay"></iframe>
+          </div>
+
+          <button class="btn" onclick="continueAfterAd()">
+            <i class="fa-solid fa-arrow-right"></i>
+            <span data-i18n="continue">Continue to App</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MAIN APP ========== -->
+    
+    <header class="app-header" id="appHeader">
+      <div class="app-title">
+        <i class="fa-solid fa-droplet"></i>
+        <span id="headerTitle">LifeDrop</span>
+      </div>
+      <button class="icon-btn" id="themeToggle">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    </header>
+
+    <main class="app-content" id="mainContent" style="display: none;">
+
+      <!-- Registration Screen -->
+      <section id="register" class="view">
+        <div class="card">
+          <div style="text-align: center; margin-bottom: 16px;">
+            <i class="fa-solid fa-hand-holding-droplet" style="font-size: 2.5rem; color: var(--primary);"></i>
+            <h2 style="margin-top: 8px;" data-i18n="become_donor">Become a Donor</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem;" data-i18n="sign_up_desc">Sign up to save lives in your area.</p>
+          </div>
+
+          <form onsubmit="handleAuth(event, 'home')">
+            <div class="form-group">
+              <label class="form-label" data-i18n="full_name">Full Name</label>
+              <input type="text" class="form-input" placeholder="John Doe" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" data-i18n="blood_group">Blood Group</label>
+              <select class="form-select" required>
+                <option value="" data-i18n="select_group">Select Group</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" data-i18n="location">Location / City</label>
+              <input type="text" class="form-input" placeholder="New York, NY" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" data-i18n="phone">Phone Number</label>
+              <input type="tel" class="form-input" placeholder="+1 234 567 890" required>
+            </div>
+
+            <button type="submit" class="btn">
+              <i class="fa-solid fa-user-plus"></i> <span data-i18n="register_btn">Register as Donor</span>
+            </button>
+          </form>
+
+          <p style="text-align: center; margin-top: 16px; font-size: 0.85rem; color: var(--text-muted);">
+            <span data-i18n="already_reg">Already registered?</span> <a href="#login" style="color: var(--primary); font-weight: 600;" data-i18n="log_in">Log In</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- Login Screen -->
+      <section id="login" class="view">
+        <div class="card">
+          <h2 data-i18n="welcome_back">Welcome Back</h2>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;" data-i18n="login_desc">Log in to view urgent blood requests.</p>
+          
+          <form onsubmit="handleAuth(event, 'home')">
+            <div class="form-group">
+              <label class="form-label" data-i18n="phone_email">Phone or Email</label>
+              <input type="text" class="form-input" placeholder="Enter contact info" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="password">Password</label>
+              <input type="password" class="form-input" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn" data-i18n="sign_in">Sign In</button>
+          </form>
+
+          <p style="text-align: center; margin-top: 16px; font-size: 0.85rem; color: var(--text-muted);">
+            <span data-i18n="need_account">Need an account?</span> <a href="#register" style="color: var(--primary); font-weight: 600;" data-i18n="register_now">Register Now</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- Dashboard Home -->
+      <section id="home" class="view">
+        <div class="card" style="background: linear-gradient(135deg, #e11d48, #be123c); color: white;">
+          <h3 style="font-size: 1.2rem;" data-i18n="urgent_needed">Urgent Blood Needed!</h3>
+          <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 4px;" data-i18n="urgent_desc">There are 3 urgent requests matching your location.</p>
+          <button class="btn" style="background: white; color: var(--primary); margin-top: 14px; font-weight: 700;" onclick="navigate('#request')">
+            <i class="fa-solid fa-plus"></i> <span data-i18n="create_request">Create Blood Request</span>
+          </button>
+        </div>
+
+        <div class="card">
+          <h4 style="margin-bottom: 12px;" data-i18n="nearby_requests">Nearby Requests</h4>
+          
+          <div class="request-card">
+            <div>
+              <strong>City Hospital</strong>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">2 units • 1.5 km away</div>
+            </div>
+            <span class="blood-badge">O+</span>
+          </div>
+
+          <div class="request-card">
+            <div>
+              <strong>St. Jude Clinic</strong>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">1 unit • 3.2 km away</div>
+            </div>
+            <span class="blood-badge">AB-</span>
+          </div>
+
+          <div class="request-card">
+            <div>
+              <strong>General Health Center</strong>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">3 units • 5.0 km away</div>
+            </div>
+            <span class="blood-badge">B+</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Create Request -->
+      <section id="request" class="view">
+        <div class="card">
+          <h3 data-i18n="request_emergency">Request Blood Emergency</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;" data-i18n="request_desc">Post a request to notify nearby donors.</p>
+          
+          <form onsubmit="handleAuth(event, 'home')">
+            <div class="form-group">
+              <label class="form-label" data-i18n="patient_name">Patient Name</label>
+              <input type="text" class="form-input" placeholder="Patient Full Name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="required_group">Required Blood Group</label>
+              <select class="form-select" required>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="hospital">Hospital Name & Address</label>
+              <input type="text" class="form-input" placeholder="Hospital details" required>
+            </div>
+            <button type="submit" class="btn"><i class="fa-solid fa-bullhorn"></i> <span data-i18n="post_request">Post Emergency Request</span></button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Profile Screen -->
+      <section id="profile" class="view">
+        <div class="card" style="text-align: center;">
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: #ffe4e6; color: var(--primary); font-weight: 800; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+            O+
+          </div>
+          <h3>John Donor</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem;" data-i18n="registered_donor">Registered Donor • New York</p>
+
+          <div style="display: flex; justify-content: space-around; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <div>
+              <strong style="font-size: 1.2rem; color: var(--primary);">4</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="donations">Donations</div>
+            </div>
+            <div>
+              <strong style="font-size: 1.2rem; color: var(--primary);">12</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="lives_saved">Lives Saved</div>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary" style="margin-top: 20px;" onclick="navigate('#login')">
+            <i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="log_out">Log Out</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <nav class="app-nav" id="bottomNav">
+      <a href="#home" class="nav-item">
+        <i class="fa-solid fa-house"></i>
+        <span data-i18n="nav_home">Home</span>
+      </a>
+      <a href="#request" class="nav-item">
+        <i class="fa-solid fa-hand-holding-medical"></i>
+        <span data-i18n="nav_request">Request</span>
+      </a>
+      <a href="#profile" class="nav-item">
+        <i class="fa-solid fa-user-gear"></i>
+        <span data-i18n="nav_profile">Profile</span>
+      </a>
+    </nav>
+
+  </div>
+
+  <script>
+    // ========== TRANSLATIONS ==========
+    const translations = {
+      en: {
+        choose_lang: "Choose Language",
+        choose_lang_desc: "Select your preferred language",
+        who_are_you: "Who are you?",
+        who_are_you_desc: "Please select your role to continue",
+        i_am_donor: "I am a Blood Donor",
+        i_need_blood: "I Need Blood",
+        thank_donor: "Thank you, Hero!",
+        ad_note: "Please view this short message. Your support helps us keep the service free.",
+        continue: "Continue to App",
+        become_donor: "Become a Donor",
+        sign_up_desc: "Sign up to save lives in your area.",
+        full_name: "Full Name",
+        blood_group: "Blood Group",
+        select_group: "Select Group",
+        location: "Location / City",
+        phone: "Phone Number",
+        register_btn: "Register as Donor",
+        already_reg: "Already registered?",
+        log_in: "Log In",
+        welcome_back: "Welcome Back",
+        login_desc: "Log in to view urgent blood requests.",
+        phone_email: "Phone or Email",
+        password: "Password",
+        sign_in: "Sign In",
+        need_account: "Need an account?",
+        register_now: "Register Now",
+        urgent_needed: "Urgent Blood Needed!",
+        urgent_desc: "There are 3 urgent requests matching your location.",
+        create_request: "Create Blood Request",
+        nearby_requests: "Nearby Requests",
+        request_emergency: "Request Blood Emergency",
+        request_desc: "Post a request to notify nearby donors.",
+        patient_name: "Patient Name",
+        required_group: "Required Blood Group",
+        hospital: "Hospital Name & Address",
+        post_request: "Post Emergency Request",
+        registered_donor: "Registered Donor • New York",
+        donations: "Donations",
+        lives_saved: "Lives Saved",
+        log_out: "Log Out",
+        nav_home: "Home",
+        nav_request: "Request",
+        nav_profile: "Profile",
+        titles: {
+          register: "Register Donor",
+          login: "Sign In",
+          home: "LifeDrop Feed",
+          request: "New Request",
+          profile: "Donor Profile"
+        }
+      },
+      bn: {
+        choose_lang: "ভাষা নির্বাচন করুন",
+        choose_lang_desc: "আপনার পছন্দের ভাষা নির্বাচন করুন",
+        who_are_you: "আপনি কে?",
+        who_are_you_desc: "চালিয়ে যেতে আপনার ভূমিকা নির্বাচন করুন",
+        i_am_donor: "আমি রক্তদাতা",
+        i_need_blood: "আমার রক্ত দরকার",
+        thank_donor: "ধন্যবাদ, বীর!",
+        ad_note: "অনুগ্রহ করে এই সংক্ষিপ্ত বার্তাটি দেখুন। আপনার সমর্থন আমাদের সেবা বিনামূল্যে রাখতে সাহায্য করে।",
+        continue: "অ্যাপে চালিয়ে যান",
+        become_donor: "রক্তদাতা হোন",
+        sign_up_desc: "আপনার এলাকায় জীবন বাঁচাতে সাইন আপ করুন।",
+        full_name: "পূর্ণ নাম",
+        blood_group: "রক্তের গ্রুপ",
+        select_group: "গ্রুপ নির্বাচন করুন",
+        location: "অবস্থান / শহর",
+        phone: "ফোন নম্বর",
+        register_btn: "রক্তদাতা হিসেবে নিবন্ধন",
+        already_reg: "ইতিমধ্যে নিবন্ধিত?",
+        log_in: "লগ ইন",
+        welcome_back: "স্বাগতম",
+        login_desc: "জরুরি রক্তের অনুরোধ দেখতে লগ ইন করুন।",
+        phone_email: "ফোন বা ইমেইল",
+        password: "পাসওয়ার্ড",
+        sign_in: "সাইন ইন",
+        need_account: "অ্যাকাউন্ট প্রয়োজন?",
+        register_now: "এখনই নিবন্ধন করুন",
+        urgent_needed: "জরুরি রক্ত প্রয়োজন!",
+        urgent_desc: "আপনার অবস্থানের সাথে মিলে যাওয়া ৩টি জরুরি অনুরোধ আছে।",
+        create_request: "রক্তের অনুরোধ তৈরি করুন",
+        nearby_requests: "কাছাকাছি অনুরোধ",
+        request_emergency: "জরুরি রক্তের অনুরোধ",
+        request_desc: "কাছাকাছি রক্তদাতাদের জানাতে অনুরোধ পোস্ট করুন।",
+        patient_name: "রোগীর নাম",
+        required_group: "প্রয়োজনীয় রক্তের গ্রুপ",
+        hospital: "হাসপাতালের নাম ও ঠিকানা",
+        post_request: "জরুরি অনুরোধ পোস্ট করুন",
+        registered_donor: "নিবন্ধিত রক্তদাতা • নিউ ইয়র্ক",
+        donations: "দান",
+        lives_saved: "জীবন বাঁচানো",
+        log_out: "লগ আউট",
+        nav_home: "হোম",
+        nav_request: "অনুরোধ",
+        nav_profile: "প্রোফাইল",
+        titles: {
+          register: "রক্তদাতা নিবন্ধন",
+          login: "সাইন ইন",
+          home: "লাইফড্রপ ফিড",
+          request: "নতুন অনুরোধ",
+          profile: "রক্তদাতার প্রোফাইল"
+        }
+      }
+    };
+
+    let currentLang = 'en';
+    let userRole = null;
+
+    // Apply translations
+    function applyTranslations(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang === 'bn' ? 'bn' : 'en';
+      const t = translations[lang];
+      
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) {
+          el.textContent = t[key];
+        }
+      });
+    }
+
+    // ========== ONBOARDING FLOW ==========
+    function showScreen(id) {
+      document.querySelectorAll('.onboarding-screen').forEach(s => {
+        s.classList.remove('active');
+      });
+      const screen = document.getElementById(id);
+      if (screen) {
+        // Small delay for smoother transition
+        setTimeout(() => {
+          screen.classList.add('active');
+        }, 50);
+      }
+    }
+
+    function hideAllOnboarding() {
+      document.querySelectorAll('.onboarding-screen').forEach(s => {
+        s.classList.remove('active');
+      });
+    }
+
+    // Start: Splash → Language
+    window.addEventListener('DOMContentLoaded', () => {
+      // After blood logo animation (~2.8s), go to language
+      setTimeout(() => {
+        showScreen('language');
+      }, 2800);
+    });
+
+    function selectLanguage(lang) {
+      applyTranslations(lang);
+      // Slow transition to role selection
+      const langScreen = document.getElementById('language');
+      langScreen.classList.add('fade-out');
+      setTimeout(() => {
+        langScreen.classList.remove('active', 'fade-out');
+        showScreen('role');
+      }, 600);
+    }
+
+    function selectRole(role) {
+      userRole = role;
+      const roleScreen = document.getElementById('role');
+      roleScreen.classList.add('fade-out');
+
+      setTimeout(() => {
+        roleScreen.classList.remove('active', 'fade-out');
+
+        if (role === 'donor') {
+          // Show ad
+          const iframe = document.getElementById('adIframe');
+          iframe.src = 'https://www.effectivecpmnetwork.com/mu9hqxqn2?key=8dd9f2b39cb549c9826f52eb8e17ca6d';
+          showScreen('adScreen');
+        } else {
+          // Need blood → go directly to request
+          enterApp('request');
+        }
+      }, 600);
+    }
+
+    function continueAfterAd() {
+      const adScreen = document.getElementById('adScreen');
+      adScreen.classList.add('fade-out');
+      setTimeout(() => {
+        adScreen.classList.remove('active', 'fade-out');
+        // Donors go to registration
+        enterApp('register');
+      }, 500);
+    }
+
+    function enterApp(startHash) {
+      hideAllOnboarding();
+      document.getElementById('appHeader').classList.add('visible');
+      document.getElementById('mainContent').style.display = 'block';
+      document.getElementById('bottomNav').classList.add('visible');
+      
+      // Navigate to the desired section
+      window.location.hash = startHash;
+      router();
+    }
+
+    // ========== ORIGINAL APP LOGIC ==========
+    const routes = {
+      'register': { titleKey: 'register', showNav: false },
+      'login': { titleKey: 'login', showNav: false },
+      'home': { titleKey: 'home', showNav: true },
+      'request': { titleKey: 'request', showNav: true },
+      'profile': { titleKey: 'profile', showNav: true }
+    };
+
+    function router() {
+      let hash = window.location.hash.substring(1) || 'register';
+      if (!routes[hash]) hash = 'register';
+
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      const activeView = document.getElementById(hash);
+      if (activeView) activeView.classList.add('active');
+
+      const titleKey = routes[hash].titleKey;
+      const t = translations[currentLang];
+      document.getElementById('headerTitle').textContent = t.titles[titleKey] || 'LifeDrop';
+
+      const nav = document.getElementById('bottomNav');
+      if (routes[hash].showNav) {
+        nav.classList.add('visible');
+      } else {
+        nav.classList.remove('visible');
+      }
+
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.getAttribute('href') === `#${hash}`);
+      });
+    }
+
+    function navigate(hash) {
+      window.location.hash = hash;
+    }
+
+    function handleAuth(e, targetHash) {
+      e.preventDefault();
+      navigate(targetHash);
+    }
+
+    const themeBtn = document.getElementById('themeToggle');
+    themeBtn.addEventListener('click', () => {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      themeBtn.querySelector('i').className = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+    });
+
+    window.addEventListener('hashchange', router);
+  </script>
+</body>
+</html>
